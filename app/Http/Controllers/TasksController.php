@@ -38,14 +38,23 @@ class TasksController extends AbstractController
     {
         $task = new Task();
 
-        $this->validateAndSave($task, $request);
+        $this->fillAndSave($task, $request);
 
         return $this->created();
     }
 
     public function update(Task $task, TaskRequest $request): JsonResponse
     {
-        $this->validateAndSave($task, $request);
+        $this->fillAndSave($task, $request);
+
+        return $this->noContent();
+    }
+
+    public function updateStatus(Task $task): JsonResponse
+    {
+        $task->is_completed = !$task->is_completed;
+
+        $this->save($task);
 
         return $this->noContent();
     }
@@ -70,12 +79,17 @@ class TasksController extends AbstractController
         }
     }
 
-    private function validateAndSave(Task $task, TaskRequest $request): void
+    private function fillAndSave(Task $task, TaskRequest $request): void
     {
         $toFill = $request->all();
 
         $task->fill($toFill);
 
+        $this->save($task);
+    }
+
+    private function save(Task $task): void
+    {
         DB::transaction(function () use ($task) {
             $task->save();
         });
