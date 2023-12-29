@@ -8,4 +8,5 @@
 - run "composer install"
 - run "php artisan migrate"
 - run "npm install"
+- run "npm run build"
 - run "php artisan serve"
