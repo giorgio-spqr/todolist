@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class TasksController extends AbstractController
 {
-    private const DEFAULT_PER_PAGE = 5;
+    private const DEFAULT_PER_PAGE = 15;
     public function index(Request $request): JsonResponse
     {
         $query = Task::query();
