@@ -1,11 +1,13 @@
 <template>
   <div>
-    <select @change="fetchTasks" v-model="selected">
-      <option value="3">All</option>
-      <option value="1">Completed</option>
-      <option value="0">Not Completed</option>
-    </select>
-    <table class="table">
+    <div class="col-sm-4">
+      <select class="form-select form-select-sm mb-3" @change="fetchTasks" v-model="selected">
+        <option value=3>All</option>
+        <option value=1>Completed</option>
+        <option value=0>Not Completed</option>
+      </select>
+    </div>
+    <table class="table table-striped">
       <thead>
       <tr>
         <th scope="col">#</th>
@@ -24,16 +26,36 @@
         <td>{{ task.is_completed }}</td>
         <td>
           <div class="row gap-1">
-            <button v-if="task.is_completed" @click="changeStatus(task)" type="button" class="p-2 col border btn btn-dark">Uncompleted</button>
-            <button v-else @click="changeStatus(task)" type="button" class="p-2 col border btn btn-dark">Completed</button>
-            <router-link :to="`/tasks/${task.id}`" class="p-2 col border btn btn-primary">View</router-link>
-            <router-link :to="`/tasks/${task.id}/edit`" class="p-2 col border btn btn-success">Edit</router-link>
+            <button v-if="task.is_completed" @click="changeStatus(task)" type="button" class="p-2 col border btn btn-primary">Uncompleted</button>
+            <button v-else @click="changeStatus(task)" type="button" class="p-2 col border btn btn-primary">Completed</button>
+            <button @click="$router.push(`/tasks/${task.id}`)" type="button" class="p-2 col border btn btn-primary">View</button>
+            <button @click="$router.push(`/tasks/${task.id}/edit`)" type="button" class="p-2 col border btn btn-primary">Edit</button>
             <button @click="deleteTask(task.id)" type="button" class="p-2 col border btn btn-danger">Delete</button>
           </div>
         </td>
       </tr>
       </tbody>
     </table>
+  </div>
+  <div class="m-4">
+    <ul class="pagination justify-content-center">
+      <li
+          class="page-item"
+          v-for="pageNumber in totalPages"
+          :key="pageNumber"
+          :class="{
+          'page-item active': page === pageNumber
+          }"
+      >
+        <a
+            class="page-link"
+            type="button"
+            @click="changePage(pageNumber)"
+        >
+          {{ pageNumber }}
+        </a>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -45,8 +67,9 @@ export default {
     return {
       selected: 3,
       tasks: [],
-      currentPage: 1,
-      perPage: 15, // Set the number of items per page
+      page: 1,
+      perPage: 5, // Set the number of items per page
+      totalPages: 0,
     }
   },
   async created() {
@@ -57,6 +80,8 @@ export default {
       try {
         const params = {};
         params.per_page = this.perPage;
+        params.page = this.page;
+
         if (this.selected < 2) {
           params.is_completed = this.selected
         }
@@ -64,20 +89,37 @@ export default {
           params: params,
         });
         this.tasks = response.data['data'];
+        this.totalPages = response.data['meta']['last_page'];
       } catch (error) {
-        console.error(error); // place to handle API errors
+        alert('Bad response form server!');
       }
     },
+
+    // page change
+    changePage(pageNumber) {
+      this.page = pageNumber;
+    },
+
+    // delete task
     async deleteTask(id) {
       try {
         await axios.delete(`/api/tasks/${id}`);
         this.tasks = this.tasks.filter(task => task.id !== id);
       } catch (error) {
-        console.error(error); // place to handle API errors
+        alert('Bad response form server!');
       }
     },
+
+    // change task completion status
     changeStatus(task) {
       this.$store.commit('changeStatus', task)
+    }
+  },
+
+  // reload tasks on page changing
+  watch: {
+    page() {
+      this.fetchTasks();
     }
   }
 }

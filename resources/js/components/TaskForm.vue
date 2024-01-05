@@ -53,9 +53,9 @@ export default {
         } else {
           await axios.patch(`/api/tasks/${this.$route.params.id}`, this.task);
         }
-        this.$router.push('/');
+        await this.$router.push('/');
       } catch (error) {
-        console.error(error);
+        alert('Bad response form server!');
       }
     }
   }
